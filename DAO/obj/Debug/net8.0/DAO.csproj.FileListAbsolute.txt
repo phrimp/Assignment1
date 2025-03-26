@@ -1,0 +1,16 @@
+E:\Work\PhienNT_Net1709_A01.sln\DAO\bin\Debug\net8.0\DAO.deps.json
+E:\Work\PhienNT_Net1709_A01.sln\DAO\bin\Debug\net8.0\DAO.dll
+E:\Work\PhienNT_Net1709_A01.sln\DAO\bin\Debug\net8.0\DAO.pdb
+E:\Work\PhienNT_Net1709_A01.sln\DAO\bin\Debug\net8.0\Models.dll
+E:\Work\PhienNT_Net1709_A01.sln\DAO\bin\Debug\net8.0\Models.pdb
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.csproj.AssemblyReference.cache
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.GeneratedMSBuildEditorConfig.editorconfig
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.AssemblyInfoInputs.cache
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.AssemblyInfo.cs
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.csproj.CoreCompileInputs.cache
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.sourcelink.json
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.csproj.Up2Date
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.dll
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\refint\DAO.dll
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\DAO.pdb
+E:\Work\PhienNT_Net1709_A01.sln\DAO\obj\Debug\net8.0\ref\DAO.dll

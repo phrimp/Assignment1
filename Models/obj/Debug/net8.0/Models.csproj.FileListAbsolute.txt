@@ -12,3 +12,4 @@ E:\Work\PhienNT_Net1709_A01.sln\Models\obj\Debug\net8.0\refint\Models.dll
 E:\Work\PhienNT_Net1709_A01.sln\Models\obj\Debug\net8.0\Models.pdb
 E:\Work\PhienNT_Net1709_A01.sln\Models\obj\Debug\net8.0\Models.genruntimeconfig.cache
 E:\Work\PhienNT_Net1709_A01.sln\Models\obj\Debug\net8.0\ref\Models.dll
+E:\Work\PhienNT_Net1709_A01.sln\Models\obj\Debug\net8.0\Models.sourcelink.json
