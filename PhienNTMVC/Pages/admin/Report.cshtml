@@ -1,0 +1,346 @@
+﻿@page
+@model PhienNTMVC.Pages.admin.ReportsModel
+@{
+    ViewData["Title"] = "Statistical Reports";
+    Layout = "_AdminLayout.cshtml";
+}
+
+<h1>Statistical Reports</h1>
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5 class="mb-0">Generate Report</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="startDate" name="StartDate" value="@Model.StartDate.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-4">
+                <label for="endDate" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="endDate" name="EndDate" value="@Model.EndDate.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+            </div>
+        </form>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @Model.ErrorMessage
+            </div>
+        }
+        else if (Model.GeneratedReport)
+        {
+            <div class="alert alert-info mb-4">
+                <h5>Report Period: @Model.StartDate.ToString("MMMM dd, yyyy") - @Model.EndDate.ToString("MMMM dd, yyyy")</h5>
+                <p class="mb-0">Total Articles: @Model.NewsArticles.Count()</p>
+            </div>
+
+            <ul class="nav nav-tabs mb-3" id="reportTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="by-category-tab" data-bs-toggle="tab" data-bs-target="#by-category" type="button" role="tab" aria-controls="by-category" aria-selected="true">
+                        Articles by Category
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="by-status-tab" data-bs-toggle="tab" data-bs-target="#by-status" type="button" role="tab" aria-controls="by-status" aria-selected="false">
+                        Articles by Status
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="by-author-tab" data-bs-toggle="tab" data-bs-target="#by-author" type="button" role="tab" aria-controls="by-author" aria-selected="false">
+                        Articles by Author
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="reportTabsContent">
+                <div class="tab-pane fade show active" id="by-category" role="tabpanel" aria-labelledby="by-category-tab">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-center">Article Count</th>
+                                            <th class="text-center">Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var category in Model.ArticlesByCategory.OrderByDescending(x => x.Count))
+                                        {
+                                            <tr>
+                                                <td>@category.CategoryName</td>
+                                                <td class="text-center">@category.Count</td>
+                                                <td class="text-center">@category.Percentage.ToString("0.0")%</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="chart-container" style="position: relative; height:300px;">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="by-status" role="tabpanel" aria-labelledby="by-status-tab">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Status</th>
+                                            <th class="text-center">Article Count</th>
+                                            <th class="text-center">Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var status in Model.ArticlesByStatus.OrderByDescending(x => x.Count))
+                                        {
+                                            <tr>
+                                                <td>@status.Status</td>
+                                                <td class="text-center">@status.Count</td>
+                                                <td class="text-center">@status.Percentage.ToString("0.0")%</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="chart-container" style="position: relative; height:300px;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="by-author" role="tabpanel" aria-labelledby="by-author-tab">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Author</th>
+                                            <th class="text-center">Article Count</th>
+                                            <th class="text-center">Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var author in Model.ArticlesByAuthor.OrderByDescending(x => x.Count))
+                                        {
+                                            <tr>
+                                                <td>@author.AuthorName</td>
+                                                <td class="text-center">@author.Count</td>
+                                                <td class="text-center">@author.Percentage.ToString("0.0")%</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="chart-container" style="position: relative; height:300px;">
+                                <canvas id="authorChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h5>Detailed News Articles</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Created By</th>
+                                <th>Created Date</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var article in Model.NewsArticles.OrderByDescending(a => a.CreatedDate))
+                            {
+                                <tr>
+                                    <td>@article.NewsTitle</td>
+                                    <td>@article.Category.CategoryName</td>
+                                    <td>@article.CreatedBy.AccountName</td>
+                                    <td>@article.CreatedDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@article.NewsStatus</td>
+                                    <td class="text-center">
+                                        <a href="/news/Details?id=@article.NewsArticleId" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                Please select a date range and click "Generate Report" to see statistics.
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+    @if (Model.GeneratedReport)
+    {
+        <script>
+            // Category Chart
+            const categoryData = {
+                labels: [@Html.Raw(string.Join(",", Model.ArticlesByCategory.OrderByDescending(x => x.Count).Select(x => $"'{x.CategoryName}'")))],
+                datasets: [{
+                    label: 'Articles by Category',
+                    data: [@string.Join(",", Model.ArticlesByCategory.OrderByDescending(x => x.Count).Select(x => x.Count))],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(199, 199, 199, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+            const categoryChart = new Chart(ctxCategory, {
+                type: 'pie',
+                data: categoryData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                    const percentage = Math.round((value / total) * 1000) / 10;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Status Chart
+            const statusData = {
+                labels: [@Html.Raw(string.Join(",", Model.ArticlesByStatus.OrderByDescending(x => x.Count).Select(x => $"'{x.Status}'")))],
+                datasets: [{
+                    label: 'Articles by Status',
+                    data: [@string.Join(",", Model.ArticlesByStatus.OrderByDescending(x => x.Count).Select(x => x.Count))],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            const statusChart = new Chart(ctxStatus, {
+                type: 'pie',
+                data: statusData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                    const percentage = Math.round((value / total) * 1000) / 10;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Author Chart
+            const authorData = {
+                labels: [@Html.Raw(string.Join(",", Model.ArticlesByAuthor.OrderByDescending(x => x.Count).Take(10).Select(x => $"'{x.AuthorName}'")))],
+                datasets: [{
+                    label: 'Articles by Author',
+                    data: [@string.Join(",", Model.ArticlesByAuthor.OrderByDescending(x => x.Count).Take(10).Select(x => x.Count))],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(199, 199, 199, 0.7)',
+                        'rgba(83, 123, 196, 0.7)',
+                        'rgba(175, 92, 101, 0.7)',
+                        'rgba(127, 157, 54, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const ctxAuthor = document.getElementById('authorChart').getContext('2d');
+            const authorChart = new Chart(ctxAuthor, {
+                type: 'pie',
+                data: authorData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                    const percentage = Math.round((value / total) * 1000) / 10;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    }
+}

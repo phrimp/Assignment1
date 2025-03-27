@@ -1,54 +1,119 @@
 ﻿@page
 @model PhienNTMVC.Pages.admin.IndexModel
-
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "User Management";
+    Layout = "_AdminLayout.cshtml";
 }
 
-<h1>Index</h1>
+<h1>User Management</h1>
 
-<p>
-    <a asp-page="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.SystemAccount[0].AccountName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.SystemAccount[0].AccountEmail)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.SystemAccount[0].AccountRole)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.SystemAccount[0].AccountPassword)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model.SystemAccount) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountEmail)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountRole)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountPassword)
-            </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.AccountId">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.AccountId">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.AccountId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="card shadow-sm">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0">Users List</h5>
+            </div>
+            <div class="col-auto">
+                <a asp-page="Create" class="btn btn-primary btn-sm">Create New</a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <form method="get" class="d-flex">
+                <input type="text" name="SearchTerm" class="form-control me-2" placeholder="Search users..." value="@Model.SearchTerm">
+                <select name="RoleFilter" class="form-select me-2" asp-items="Model.RoleList">
+                    <option value="">All Roles</option>
+                </select>
+                <button type="submit" class="btn btn-outline-primary">Search</button>
+                @if (!string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.RoleFilter))
+                {
+                    <a asp-page="./Index" class="btn btn-outline-secondary ms-2">Clear</a>
+                }
+            </form>
+        </div>
+
+        @if (!string.IsNullOrEmpty(TempData["SuccessMessage"] as string))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(TempData["ErrorMessage"] as string))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.SystemAccount.Any())
+                    {
+                        @foreach (var item in Model.SystemAccount)
+                        {
+                            <tr>
+                                <td>@item.AccountName</td>
+                                <td>@item.AccountEmail</td>
+                                <td>
+                                    @{
+                                        string roleName = item.AccountRole;
+                                        string badgeClass = "bg-secondary";
+                                        if (roleName == "Admin" || roleName == "0")
+                                        {
+                                            roleName = "Admin";
+                                            badgeClass = "bg-danger";
+                                        }
+                                        else if (roleName == "Staff" || roleName == "1")
+                                        {
+                                            roleName = "Staff";
+                                            badgeClass = "bg-primary";
+                                        }
+                                        else if (roleName == "Lecturer" || roleName == "2")
+                                        {
+                                            roleName = "Lecturer";
+                                            badgeClass = "bg-success";
+                                        }
+                                    }
+                                    <span class="badge @badgeClass">@roleName</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="./Details?id=@item.AccountId" class="btn btn-outline-info btn-sm">
+                                            Details
+                                        </a>
+                                        <a href="./Edit?id=@item.AccountId" class="btn btn-outline-primary btn-sm">
+                                            Edit
+                                        </a>
+                                        <a href="./Delete?id=@item.AccountId" class="btn btn-outline-danger btn-sm"
+                                        @(item.AccountId == Model.CurrentUserId ? "onclick=\"return alert('You cannot delete your own account.'); return false;\"" : "")>
+                                            Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center">No users found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

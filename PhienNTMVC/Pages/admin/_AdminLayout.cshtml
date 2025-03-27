@@ -1,0 +1,38 @@
+﻿@{
+    Layout = "../Shared/_Layout.cshtml";
+    var currentRole = Context.Session.GetString("role");
+    var isAdmin = currentRole == "Admin" || currentRole == "0";
+    if (!isAdmin)
+    {
+        Context.Response.Redirect("/login");
+        return;
+    }
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group mb-4">
+                <a asp-page="/admin/Index" class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["page"].ToString().Contains("/admin/Index") ? "active" : "")">
+                    User Management
+                </a>
+                <a asp-page="/admin/Report" class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["page"].ToString().Contains("/admin/Report") ? "active" : "")">
+                    Reports
+                </a>
+                <a asp-page="/admin/Create" class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["page"].ToString().Contains("/admin/Create") ? "active" : "")">
+                    Create User
+                </a>
+                <a asp-page="/news/Index" class="list-group-item list-group-item-action">
+                    View News
+                </a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}
