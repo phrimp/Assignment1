@@ -1,79 +1,78 @@
 ﻿@page
 @model PhienNTMVC.Pages.news.DetailsModel
-
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = Model.NewsArticle.NewsTitle;
 }
 
-<h1>Details</h1>
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-page="/news/Index">News</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.NewsArticle.NewsTitle</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
 
-<div>
-    <h4>NewsArticle</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.NewsTitle)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.NewsTitle)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.Headline)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.Headline)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.CreatedDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.CreatedDate)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.NewsContent)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.NewsContent)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.NewsSource)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.NewsSource)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.NewsStatus)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.NewsStatus)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.ModifiedDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.ModifiedDate)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.Category)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.Category.CategoryName)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.CreatedBy)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.CreatedBy.AccountEmail)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.UpdatedBy)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.UpdatedBy.AccountEmail)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-page="./Edit" asp-route-id="@Model.NewsArticle.NewsArticleId">Edit</a> |
-    <a asp-page="./Index">Back to List</a>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h1 class="card-title mb-4">@Model.NewsArticle.NewsTitle</h1>
+
+            <div class="d-flex justify-content-between mb-4">
+                <div>
+                    <span class="badge bg-primary">@Model.NewsArticle.Category.CategoryName</span>
+                    @if (Model.Tags != null && Model.Tags.Any())
+                    {
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <span class="badge bg-secondary ms-1">@tag.TagName</span>
+                        }
+                    }
+                </div>
+                <small class="text-muted">
+                    Published on @Model.NewsArticle.CreatedDate.ToString("MMMM dd, yyyy")
+                </small>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.NewsArticle.Headline))
+            {
+                <div class="alert alert-light">
+                    <h5>@Model.NewsArticle.Headline</h5>
+                </div>
+            }
+
+            <div class="mt-4">
+                @Html.Raw(Model.NewsArticle.NewsContent.Replace("\n", "<br />"))
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.NewsArticle.NewsSource))
+            {
+                <div class="mt-4">
+                    <strong>Source:</strong> @Model.NewsArticle.NewsSource
+                </div>
+            }
+
+            <div class="mt-4 text-muted">
+                <small>
+                    Created by @Model.NewsArticle.CreatedBy.AccountName
+                    @if (Model.NewsArticle.UpdatedById.HasValue)
+                    {
+                        <span> | Last updated by @Model.NewsArticle.UpdatedBy.AccountName on @Model.NewsArticle.ModifiedDate?.ToString("MMMM dd, yyyy")</span>
+                    }
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-page="./Index" class="btn btn-outline-primary">Back to List</a>
+        @if (HttpContext.Session.GetString("email") != null)
+        {
+            <a asp-page="./Edit" asp-route-id="@Model.NewsArticle.NewsArticleId" class="btn btn-outline-secondary ms-2">Edit</a>
+            <a asp-page="./Delete" asp-route-id="@Model.NewsArticle.NewsArticleId" class="btn btn-outline-danger ms-2">Delete</a>
+        }
+    </div>
 </div>

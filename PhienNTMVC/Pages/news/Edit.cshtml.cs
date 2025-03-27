@@ -5,75 +5,169 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using Models;
+using Repository;
 
 namespace PhienNTMVC.Pages.news
 {
     public class EditModel : PageModel
     {
-        private readonly Models.NewsSystemContext _context;
+        private readonly INewsArticleRepo _newsRepo;
+        private readonly ICategoryRepo _categoryRepo;
+        private readonly IAccountRepo _accountRepo;
+        private readonly ITagRepo _tagRepo;
 
-        public EditModel(Models.NewsSystemContext context)
+        public EditModel(
+            INewsArticleRepo newsRepo,
+            ICategoryRepo categoryRepo,
+            IAccountRepo accountRepo,
+            ITagRepo tagRepo)
         {
-            _context = context;
+            _newsRepo = newsRepo;
+            _categoryRepo = categoryRepo;
+            _accountRepo = accountRepo;
+            _tagRepo = tagRepo;
         }
 
         [BindProperty]
-        public NewsArticle NewsArticle { get; set; } = default!;
+        public NewsArticle NewsArticle { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        [BindProperty]
+        public string SelectedTags { get; set; } // Comma-separated tag ids
+
+        [BindProperty]
+        public string NewTags { get; set; } // Comma-separated new tag names
+
+        public SelectList CategorySelectList { get; set; }
+        public List<Tag> AvailableTags { get; set; } = new List<Tag>();
+        public List<Tag> CurrentTags { get; set; } = new List<Tag>();
+
+        public IActionResult OnGet(int? id)
         {
+            var userEmail = HttpContext.Session.GetString("email");
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/login");
+            }
+
             if (id == null)
             {
                 return NotFound();
             }
 
-            var newsarticle =  await _context.NewsArticles.FirstOrDefaultAsync(m => m.NewsArticleId == id);
-            if (newsarticle == null)
+            NewsArticle = _newsRepo.GetNewsArticleById(id.Value);
+
+            if (NewsArticle == null)
             {
                 return NotFound();
             }
-            NewsArticle = newsarticle;
-           ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName");
-           ViewData["CreatedById"] = new SelectList(_context.SystemAccounts, "AccountId", "AccountEmail");
-           ViewData["UpdatedById"] = new SelectList(_context.SystemAccounts, "AccountId", "AccountEmail");
+
+            var currentUser = _accountRepo.GetAccountByEmail(userEmail);
+            if (currentUser == null)
+            {
+                return RedirectToPage("/login");
+            }
+
+            CategorySelectList = new SelectList(
+                _categoryRepo.GetActiveCategories(),
+                "CategoryId",
+                "CategoryName");
+
+            AvailableTags = _tagRepo.GetAllTags().ToList();
+
+            CurrentTags = _tagRepo.GetTagsByArticleId(id.Value).ToList();
+
             return Page();
         }
 
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more information, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
+        public IActionResult OnPost()
         {
+            var userEmail = HttpContext.Session.GetString("email");
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/login");
+            }
+
+            var currentUser = _accountRepo.GetAccountByEmail(userEmail);
+            if (currentUser == null)
+            {
+                return RedirectToPage("/login");
+            }
+
             if (!ModelState.IsValid)
             {
+                CategorySelectList = new SelectList(
+                    _categoryRepo.GetActiveCategories(),
+                    "CategoryId",
+                    "CategoryName");
+                AvailableTags = _tagRepo.GetAllTags().ToList();
+                CurrentTags = _tagRepo.GetTagsByArticleId(NewsArticle.NewsArticleId).ToList();
                 return Page();
             }
 
-            _context.Attach(NewsArticle).State = EntityState.Modified;
+            NewsArticle.UpdatedById = currentUser.AccountId;
+            NewsArticle.ModifiedDate = DateTime.Now;
 
-            try
+            _newsRepo.UpdateNewsArticle(NewsArticle);
+
+            var currentTags = _tagRepo.GetTagsByArticleId(NewsArticle.NewsArticleId).ToList();
+
+            var selectedTagIds = new List<int>();
+            if (!string.IsNullOrEmpty(SelectedTags))
             {
-                await _context.SaveChangesAsync();
+                selectedTagIds = SelectedTags.Split(',')
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Select(int.Parse)
+                    .ToList();
             }
-            catch (DbUpdateConcurrencyException)
+
+            foreach (var tag in currentTags)
             {
-                if (!NewsArticleExists(NewsArticle.NewsArticleId))
+                if (!selectedTagIds.Contains(tag.TagId))
                 {
-                    return NotFound();
+                    _newsRepo.RemoveTagFromNewsArticle(NewsArticle.NewsArticleId, tag.TagId);
                 }
-                else
+            }
+
+            foreach (var tagId in selectedTagIds)
+            {
+                if (!currentTags.Any(t => t.TagId == tagId))
                 {
-                    throw;
+                    _newsRepo.AddTagToNewsArticle(NewsArticle.NewsArticleId, tagId);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(NewTags))
+            {
+                var tagNames = NewTags.Split(',')
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Select(s => s.Trim())
+                    .ToList();
+
+                foreach (var tagName in tagNames)
+                {
+                    var existingTag = _tagRepo.GetTagByName(tagName);
+
+                    if (existingTag == null)
+                    {
+                        var newTag = new Tag
+                        {
+                            TagName = tagName
+                        };
+
+                        _tagRepo.AddTag(newTag);
+
+                        existingTag = _tagRepo.GetTagByName(tagName);
+                    }
+
+                    if (!currentTags.Any(t => t.TagId == existingTag.TagId))
+                    {
+                        _newsRepo.AddTagToNewsArticle(NewsArticle.NewsArticleId, existingTag.TagId);
+                    }
                 }
             }
 
             return RedirectToPage("./Index");
-        }
-
-        private bool NewsArticleExists(int id)
-        {
-            return _context.NewsArticles.Any(e => e.NewsArticleId == id);
         }
     }
 }

@@ -1,90 +1,72 @@
 ﻿@page
 @model PhienNTMVC.Pages.news.IndexModel
-
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "News Articles";
 }
 
-<h1>Index</h1>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h1>News Articles</h1>
+    </div>
+    <div class="col-md-6 text-end">
+        @if (HttpContext.Session.GetString("email") != null)
+        {
+            <a asp-page="Create" class="btn btn-primary">Create New</a>
+        }
+    </div>
+</div>
 
-<p>
-    <a asp-page="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].NewsTitle)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].Headline)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].CreatedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].NewsContent)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].NewsSource)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].NewsStatus)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].ModifiedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].CreatedBy)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsArticle[0].UpdatedBy)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model.NewsArticle) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.NewsTitle)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Headline)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NewsContent)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NewsSource)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NewsStatus)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ModifiedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category.CategoryName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedBy.AccountEmail)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedBy.AccountEmail)
-            </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.NewsArticleId">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.NewsArticleId">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.NewsArticleId">Delete</a>
-            </td>
-        </tr>
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex">
+            <input type="text" name="SearchTerm" class="form-control me-2" placeholder="Search news..." value="@Model.SearchTerm">
+            <select name="CategoryId" class="form-select me-2" asp-items="@(new SelectList(Model.Categories, "CategoryId", "CategoryName", Model.CategoryId))">
+                <option value="">All Categories</option>
+            </select>
+            <button type="submit" class="btn btn-outline-primary">Search</button>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm) || Model.CategoryId.HasValue)
+            {
+                <a asp-page="./Index" class="btn btn-outline-secondary ms-2">Clear</a>
+            }
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    @foreach (var item in Model.NewsArticle)
+    {
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@item.NewsTitle</h5>
+                    <p class="card-text small text-muted">
+                        <span class="badge bg-secondary">@item.Category.CategoryName</span>
+                        <span class="ms-2">@item.CreatedDate.ToString("MMM dd, yyyy")</span>
+                    </p>
+                    @if (!string.IsNullOrEmpty(item.Headline))
+                    {
+                        <p class="card-text fw-bold">@item.Headline</p>
+                    }
+                    <p class="card-text">@(item.NewsContent.Length > 150 ? item.NewsContent.Substring(0, 150) + "..." : item.NewsContent)</p>
+                </div>
+                <div class="card-footer bg-transparent d-flex justify-content-between">
+                    <a asp-page="./Details" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-primary">Read More</a>
+                    @if (HttpContext.Session.GetString("email") != null)
+                    {
+                        <div>
+                            <a asp-page="./Edit" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a asp-page="./Delete" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.NewsArticle.Any())
+{
+    <div class="alert alert-info">
+        No news articles found.
+    </div>
 }
-    </tbody>
-</table>

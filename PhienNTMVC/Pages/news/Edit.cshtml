@@ -1,80 +1,153 @@
 ﻿@page
 @model PhienNTMVC.Pages.news.EditModel
-
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit News Article";
 }
 
-<h1>Edit</h1>
+<div class="container mt-4">
+    <h1>Edit News Article</h1>
+    <hr />
 
-<h4>NewsArticle</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="NewsArticle.NewsArticleId" />
-            <div class="form-group">
-                <label asp-for="NewsArticle.NewsTitle" class="control-label"></label>
-                <input asp-for="NewsArticle.NewsTitle" class="form-control" />
-                <span asp-validation-for="NewsArticle.NewsTitle" class="text-danger"></span>
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="NewsArticle.NewsArticleId" />
+        <input type="hidden" asp-for="NewsArticle.CreatedById" />
+        <input type="hidden" asp-for="NewsArticle.CreatedDate" />
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Article Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="NewsArticle.NewsTitle" class="form-label">Title</label>
+                            <input asp-for="NewsArticle.NewsTitle" class="form-control" />
+                            <span asp-validation-for="NewsArticle.NewsTitle" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="NewsArticle.Headline" class="form-label">Headline/Summary</label>
+                            <input asp-for="NewsArticle.Headline" class="form-control" />
+                            <span asp-validation-for="NewsArticle.Headline" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="NewsArticle.NewsContent" class="form-label">Content</label>
+                            <textarea asp-for="NewsArticle.NewsContent" class="form-control" rows="10"></textarea>
+                            <span asp-validation-for="NewsArticle.NewsContent" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.Headline" class="control-label"></label>
-                <input asp-for="NewsArticle.Headline" class="form-control" />
-                <span asp-validation-for="NewsArticle.Headline" class="text-danger"></span>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Article Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="NewsArticle.CategoryId" class="form-label">Category</label>
+                            <select asp-for="NewsArticle.CategoryId" class="form-select" asp-items="Model.CategorySelectList">
+                                <option value="">-- Select Category --</option>
+                            </select>
+                            <span asp-validation-for="NewsArticle.CategoryId" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="NewsArticle.NewsSource" class="form-label">Source</label>
+                            <input asp-for="NewsArticle.NewsSource" class="form-control" />
+                            <span asp-validation-for="NewsArticle.NewsSource" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="NewsArticle.NewsStatus" class="form-label">Status</label>
+                            <select asp-for="NewsArticle.NewsStatus" class="form-select">
+                                <option value="Draft">Draft</option>
+                                <option value="Published">Published</option>
+                                <option value="Archived">Archived</option>
+                            </select>
+                            <span asp-validation-for="NewsArticle.NewsStatus" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Created by</label>
+                            <input type="text" class="form-control" value="@Model.NewsArticle.CreatedBy.AccountName" readonly />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Created on</label>
+                            <input type="text" class="form-control" value="@Model.NewsArticle.CreatedDate.ToString("MMM dd, yyyy HH:mm")" readonly />
+                        </div>
+                        
+                        @if (Model.NewsArticle.UpdatedById.HasValue)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Last updated on</label>
+                                <input type="text" class="form-control" value="@Model.NewsArticle.ModifiedDate?.ToString("MMM dd, yyyy HH:mm")" readonly />
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Tags</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Existing Tags</label>
+                            <div class="border rounded p-3 mb-3" style="max-height: 200px; overflow-y: auto;">
+                                @foreach (var tag in Model.AvailableTags)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input tag-checkbox" type="checkbox" value="@tag.TagId" id="tag-@tag.TagId"
+                                               @(Model.CurrentTags.Any(t => t.TagId == tag.TagId) ? "checked" : "")>
+                                        <label class="form-check-label" for="tag-@tag.TagId">
+                                            @tag.TagName
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <input type="hidden" asp-for="SelectedTags" id="selected-tags-input" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">New Tags</label>
+                            <input id="new-tags-input" type="text" class="form-control" placeholder="Enter tags separated by commas" />
+                            <small class="form-text text-muted">Enter new tags separated by commas (e.g. sports, technology)</small>
+                            <input type="hidden" asp-for="NewTags" id="new-tags-hidden" />
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.CreatedDate" class="control-label"></label>
-                <input asp-for="NewsArticle.CreatedDate" class="form-control" />
-                <span asp-validation-for="NewsArticle.CreatedDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.NewsContent" class="control-label"></label>
-                <input asp-for="NewsArticle.NewsContent" class="form-control" />
-                <span asp-validation-for="NewsArticle.NewsContent" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.NewsSource" class="control-label"></label>
-                <input asp-for="NewsArticle.NewsSource" class="form-control" />
-                <span asp-validation-for="NewsArticle.NewsSource" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.CategoryId" class="control-label"></label>
-                <select asp-for="NewsArticle.CategoryId" class="form-control" asp-items="ViewBag.CategoryId"></select>
-                <span asp-validation-for="NewsArticle.CategoryId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.NewsStatus" class="control-label"></label>
-                <input asp-for="NewsArticle.NewsStatus" class="form-control" />
-                <span asp-validation-for="NewsArticle.NewsStatus" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.CreatedById" class="control-label"></label>
-                <select asp-for="NewsArticle.CreatedById" class="form-control" asp-items="ViewBag.CreatedById"></select>
-                <span asp-validation-for="NewsArticle.CreatedById" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.UpdatedById" class="control-label"></label>
-                <select asp-for="NewsArticle.UpdatedById" class="form-control" asp-items="ViewBag.UpdatedById"></select>
-                <span asp-validation-for="NewsArticle.UpdatedById" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NewsArticle.ModifiedDate" class="control-label"></label>
-                <input asp-for="NewsArticle.ModifiedDate" class="form-control" />
-                <span asp-validation-for="NewsArticle.ModifiedDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
-
-<div>
-    <a asp-page="./Index">Back to List</a>
+        </div>
+        
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary" onclick="prepareTagsBeforeSubmit()">Save Changes</button>
+            <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+            <a asp-page="Delete" asp-route-id="@Model.NewsArticle.NewsArticleId" class="btn btn-danger float-end">Delete</a>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+    
+    <script>
+        function prepareTagsBeforeSubmit() {
+            // Process selected existing tags
+            const selectedTags = [];
+            document.querySelectorAll('.tag-checkbox:checked').forEach(checkbox => {
+                selectedTags.push(checkbox.value);
+            });
+            document.getElementById('selected-tags-input').value = selectedTags.join(',');
+            
+            // Process new tags
+            const newTagsInput = document.getElementById('new-tags-input').value;
+            document.getElementById('new-tags-hidden').value = newTagsInput;
+        }
+    </script>
+   }

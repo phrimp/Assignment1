@@ -1,82 +1,61 @@
 ﻿@page
 @model PhienNTMVC.Pages.news.DeleteModel
-
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete News Article";
 }
 
-<h1>Delete</h1>
+<div class="container mt-4">
+    <h1>Delete News Article</h1>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>NewsArticle</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.NewsTitle)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.NewsTitle)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.Headline)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.Headline)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.CreatedDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.CreatedDate)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.NewsContent)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.NewsContent)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.NewsSource)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.NewsSource)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.NewsStatus)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.NewsStatus)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.ModifiedDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.ModifiedDate)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.Category)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.Category.CategoryName)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.CreatedBy)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.CreatedBy.AccountEmail)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NewsArticle.UpdatedBy)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NewsArticle.UpdatedBy.AccountEmail)
-        </dd>
-    </dl>
-    
+    <div class="alert alert-danger">
+        <h4>Are you sure you want to delete this news article?</h4>
+        <p>This action cannot be undone.</p>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Article Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h2>@Model.NewsArticle.NewsTitle</h2>
+
+                    @if (!string.IsNullOrEmpty(Model.NewsArticle.Headline))
+                    {
+                        <p class="fw-bold">@Model.NewsArticle.Headline</p>
+                    }
+
+                    <p class="text-muted">
+                        Category: <span class="badge bg-secondary">@Model.NewsArticle.Category.CategoryName</span>
+                    </p>
+
+                    <p class="text-muted">
+                        Status: <span class="badge bg-info">@Model.NewsArticle.NewsStatus</span>
+                    </p>
+
+                    <p class="text-muted">
+                        Created by @Model.NewsArticle.CreatedBy.AccountName on @Model.NewsArticle.CreatedDate.ToString("MMM dd, yyyy")
+                    </p>
+
+                    @if (Model.NewsArticle.UpdatedById.HasValue)
+                    {
+                        <p class="text-muted">
+                            Last updated by @Model.NewsArticle.UpdatedBy.AccountName on @Model.NewsArticle.ModifiedDate?.ToString("MMM dd, yyyy")
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form method="post">
         <input type="hidden" asp-for="NewsArticle.NewsArticleId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-page="./Index">Back to List</a>
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="d-flex">
+            <button type="submit" class="btn btn-danger me-2">Delete</button>
+            <a asp-page="./Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
     </form>
 </div>

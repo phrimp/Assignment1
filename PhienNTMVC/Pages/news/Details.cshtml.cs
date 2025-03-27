@@ -4,38 +4,48 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using Models;
+using Repository;
 
 namespace PhienNTMVC.Pages.news
 {
     public class DetailsModel : PageModel
     {
-        private readonly Models.NewsSystemContext _context;
+        private readonly INewsArticleRepo _newsRepo;
+        private readonly ITagRepo _tagRepo;
 
-        public DetailsModel(Models.NewsSystemContext context)
+        public DetailsModel(INewsArticleRepo newsRepo, ITagRepo tagRepo)
         {
-            _context = context;
+            _newsRepo = newsRepo;
+            _tagRepo = tagRepo;
         }
 
-        public NewsArticle NewsArticle { get; set; } = default!;
+        public NewsArticle NewsArticle { get; set; }
+        public IEnumerable<Tag> Tags { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var newsarticle = await _context.NewsArticles.FirstOrDefaultAsync(m => m.NewsArticleId == id);
-            if (newsarticle == null)
+            NewsArticle = _newsRepo.GetNewsArticleById(id.Value);
+
+            if (NewsArticle == null)
             {
                 return NotFound();
             }
-            else
+
+            bool isAuthenticated = !string.IsNullOrEmpty(HttpContext.Session.GetString("email"));
+
+            if (!isAuthenticated && NewsArticle.NewsStatus != "Published")
             {
-                NewsArticle = newsarticle;
+                return RedirectToPage("/Index");
             }
+
+            Tags = _tagRepo.GetTagsByArticleId(id.Value);
+
             return Page();
         }
     }

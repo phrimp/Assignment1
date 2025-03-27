@@ -4,59 +4,72 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using Models;
+using Repository;
 
 namespace PhienNTMVC.Pages.news
 {
     public class DeleteModel : PageModel
     {
-        private readonly Models.NewsSystemContext _context;
+        private readonly INewsArticleRepo _newsRepo;
+        private readonly IAccountRepo _accountRepo;
 
-        public DeleteModel(Models.NewsSystemContext context)
+        public DeleteModel(INewsArticleRepo newsRepo, IAccountRepo accountRepo)
         {
-            _context = context;
+            _newsRepo = newsRepo;
+            _accountRepo = accountRepo;
         }
 
         [BindProperty]
-        public NewsArticle NewsArticle { get; set; } = default!;
+        public NewsArticle NewsArticle { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
+            var userEmail = HttpContext.Session.GetString("email");
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/login");
+            }
+
             if (id == null)
             {
                 return NotFound();
             }
 
-            var newsarticle = await _context.NewsArticles.FirstOrDefaultAsync(m => m.NewsArticleId == id);
+            NewsArticle = _newsRepo.GetNewsArticleById(id.Value);
 
-            if (newsarticle == null)
+            if (NewsArticle == null)
             {
                 return NotFound();
             }
-            else
-            {
-                NewsArticle = newsarticle;
-            }
+
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int? id)
+        public IActionResult OnPost()
         {
-            if (id == null)
+            var userEmail = HttpContext.Session.GetString("email");
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/login");
+            }
+
+            if (NewsArticle == null || NewsArticle.NewsArticleId == 0)
             {
                 return NotFound();
             }
 
-            var newsarticle = await _context.NewsArticles.FindAsync(id);
-            if (newsarticle != null)
+            try
             {
-                NewsArticle = newsarticle;
-                _context.NewsArticles.Remove(NewsArticle);
-                await _context.SaveChangesAsync();
+                _newsRepo.DeleteNewsArticle(NewsArticle.NewsArticleId);
+                return RedirectToPage("./Index");
             }
-
-            return RedirectToPage("./Index");
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Error deleting news article: {ex.Message}");
+                NewsArticle = _newsRepo.GetNewsArticleById(NewsArticle.NewsArticleId);
+                return Page();
+            }
         }
     }
 }
