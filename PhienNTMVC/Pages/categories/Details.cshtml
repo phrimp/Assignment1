@@ -2,42 +2,152 @@
 @model PhienNTMVC.Pages.categories.DetailsModel
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Category Details";
 }
 
-<h1>Details</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Category Details</h1>
+    <div>
+        <a asp-page="./Edit" asp-route-id="@Model.Category.CategoryId" class="btn btn-primary">Edit</a>
+        <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
 
-<div>
-    <h4>Category</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Category.CategoryName)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Category.CategoryName)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Category.CategoryDesciption)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Category.CategoryDesciption)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Category.IsActive)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Category.IsActive)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Category.ParentCategory)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Category.ParentCategory.CategoryName)
-        </dd>
-    </dl>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">@Model.Category.CategoryName</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Category Name</dt>
+            <dd class="col-sm-9">@Model.Category.CategoryName</dd>
+
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@(Model.Category.CategoryDesciption ?? "-")</dd>
+
+            <dt class="col-sm-3">Parent Category</dt>
+            <dd class="col-sm-9">
+                @if (Model.Category.ParentCategory != null)
+                {
+                    <a asp-page="./Details" asp-route-id="@Model.Category.ParentCategoryId">@Model.Category.ParentCategory.CategoryName</a>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">
+                @if (Model.Category.IsActive)
+                {
+                    <span class="badge bg-success">Active</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Inactive</span>
+                }
+            </dd>
+        </dl>
+    </div>
 </div>
-<div>
-    <a asp-page="./Edit" asp-route-id="@Model.Category.CategoryId">Edit</a> |
-    <a asp-page="./Index">Back to List</a>
-</div>
+
+@if (Model.HasSubcategories)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Subcategories</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var subcategory in Model.Subcategories)
+                        {
+                            <tr>
+                                <td>@subcategory.CategoryName</td>
+                                <td>@(subcategory.CategoryDesciption ?? "-")</td>
+                                <td>
+                                    @if (subcategory.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-page="./Details" asp-route-id="@subcategory.CategoryId" class="btn btn-sm btn-outline-info">Details</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.ArticlesInCategory.Any())
+{
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">News Articles in this Category</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Created Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var article in Model.ArticlesInCategory)
+                        {
+                            <tr>
+                                <td>@article.NewsTitle</td>
+                                <td>@article.CreatedDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    @if (article.NewsStatus == "Published")
+                                    {
+                                        <span class="badge bg-success">@article.NewsStatus</span>
+                                    }
+                                    else if (article.NewsStatus == "Draft")
+                                    {
+                                        <span class="badge bg-warning text-dark">@article.NewsStatus</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@article.NewsStatus</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="/news/Details?id=@article.NewsArticleId" class="btn btn-sm btn-outline-info">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <p>There are no news articles in this category.</p>
+    </div>
+}

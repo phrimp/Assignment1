@@ -6,39 +6,108 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Models;
+using Repository;
 
 namespace PhienNTMVC.Pages.categories
 {
     public class CreateModel : PageModel
     {
-        private readonly Models.NewsSystemContext _context;
+        private readonly ICategoryRepo _categoryRepo;
+        private readonly IConfiguration _configuration;
 
-        public CreateModel(Models.NewsSystemContext context)
+        public CreateModel(ICategoryRepo categoryRepo, IConfiguration configuration)
         {
-            _context = context;
-        }
-
-        public IActionResult OnGet()
-        {
-        ViewData["ParentCategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName");
-            return Page();
+            _categoryRepo = categoryRepo;
+            _configuration = configuration;
         }
 
         [BindProperty]
         public Category Category { get; set; } = default!;
 
-        // For more information, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
+        public SelectList ParentCategorySelectList { get; set; }
+
+        public IActionResult OnGet()
         {
-            if (!ModelState.IsValid)
+            // Check if user is logged in and is staff
+            var userEmail = HttpContext.Session.GetString("email");
+            var userRole = HttpContext.Session.GetString("role");
+
+            if (string.IsNullOrEmpty(userEmail))
             {
+                return RedirectToPage("/login");
+            }
+
+            // Check if user is staff
+            if (userRole != "Staff" && userRole != _configuration["StaffRole:RoleId"])
+            {
+                return RedirectToPage("/Index");
+            }
+
+            // Set default values
+            Category = new Category
+            {
+                IsActive = true
+            };
+
+            // Get all categories for parent dropdown
+            var categories = _categoryRepo.GetAllCategories().ToList();
+            ParentCategorySelectList = new SelectList(categories, "CategoryId", "CategoryName");
+
+            return Page();
+        }
+
+        // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+        public IActionResult OnPost()
+        {
+            // Check if user is logged in and is staff
+            var userEmail = HttpContext.Session.GetString("email");
+            var userRole = HttpContext.Session.GetString("role");
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/login");
+            }
+
+            // Check if user is staff
+            if (userRole != "Staff" && userRole != _configuration["StaffRole:RoleId"])
+            {
+                return RedirectToPage("/Index");
+            }
+
+            if (!ModelState.IsValid || Category == null)
+            {
+                // Reload parent categories dropdown
+                var categories = _categoryRepo.GetAllCategories().ToList();
+                ParentCategorySelectList = new SelectList(categories, "CategoryId", "CategoryName");
                 return Page();
             }
 
-            _context.Categories.Add(Category);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // Ensure we have a valid parent category ID or null
+                if (Category.ParentCategoryId.HasValue)
+                {
+                    var parentCategory = _categoryRepo.GetCategoryById(Category.ParentCategoryId.Value);
+                    if (parentCategory == null)
+                    {
+                        ModelState.AddModelError("Category.ParentCategoryId", "Invalid parent category selected.");
+                        var categories = _categoryRepo.GetAllCategories().ToList();
+                        ParentCategorySelectList = new SelectList(categories, "CategoryId", "CategoryName");
+                        return Page();
+                    }
+                }
 
-            return RedirectToPage("./Index");
+                _categoryRepo.CreateCategory(Category);
+                TempData["SuccessMessage"] = "Category created successfully.";
+                return RedirectToPage("./Index");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Error creating category: {ex.Message}");
+                var categories = _categoryRepo.GetAllCategories().ToList();
+                ParentCategorySelectList = new SelectList(categories, "CategoryId", "CategoryName");
+                return Page();
+            }
         }
     }
 }

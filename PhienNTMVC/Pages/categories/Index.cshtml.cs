@@ -4,26 +4,54 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using Models;
+using Repository;
 
 namespace PhienNTMVC.Pages.categories
 {
     public class IndexModel : PageModel
     {
-        private readonly Models.NewsSystemContext _context;
+        private readonly ICategoryRepo _categoryRepo;
+        private readonly IConfiguration _configuration;
 
-        public IndexModel(Models.NewsSystemContext context)
+        public IndexModel(ICategoryRepo categoryRepo, IConfiguration configuration)
         {
-            _context = context;
+            _categoryRepo = categoryRepo;
+            _configuration = configuration;
         }
 
-        public IList<Category> Category { get;set; } = default!;
+        public IList<Category> Categories { get; set; } = default!;
 
-        public async Task OnGetAsync()
+        [BindProperty(SupportsGet = true)]
+        public string SearchTerm { get; set; }
+
+        public IActionResult OnGet()
         {
-            Category = await _context.Categories
-                .Include(c => c.ParentCategory).ToListAsync();
+            // Check if user is logged in and is staff
+            var userEmail = HttpContext.Session.GetString("email");
+            var userRole = HttpContext.Session.GetString("role");
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToPage("/login");
+            }
+
+            // Check if user is staff
+            if (userRole != "Staff" && userRole != _configuration["StaffRole:RoleId"])
+            {
+                return RedirectToPage("/Index");
+            }
+
+            if (!string.IsNullOrEmpty(SearchTerm))
+            {
+                Categories = _categoryRepo.SearchCategories(SearchTerm).ToList();
+            }
+            else
+            {
+                Categories = _categoryRepo.GetAllCategories().ToList();
+            }
+
+            return Page();
         }
     }
 }
