@@ -267,3 +267,4 @@ E:\Work\PhienNT_Net1709_A01.sln\PhienNTMVC\bin\Debug\net8.0\runtimes\win\lib\net
 E:\Work\PhienNT_Net1709_A01.sln\PhienNTMVC\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Drawing.Common.dll
 E:\Work\PhienNT_Net1709_A01.sln\PhienNTMVC\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Security.Cryptography.ProtectedData.dll
 E:\Work\PhienNT_Net1709_A01.sln\PhienNTMVC\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Windows.Extensions.dll
+E:\Work\PhienNT_Net1709_A01.sln\PhienNTMVC\bin\Debug\net8.0\libman.json

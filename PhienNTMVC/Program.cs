@@ -1,6 +1,7 @@
 using Repository;
 using Models;
 using Microsoft.EntityFrameworkCore;
+using PhienNTMVC.Pages.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddScoped<IAccountRepo, AccountRepo>();
 builder.Services.AddScoped<ICategoryRepo, CategoryRepo>();
 builder.Services.AddScoped<INewsArticleRepo, NewsArticleRepo>();
 builder.Services.AddScoped<ITagRepo, TagRepo>();
+builder.Services.AddSignalR();
 
 builder.Services.AddSession(options =>
 {
@@ -36,5 +38,7 @@ app.UseSession();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapHub<UserHub>("/userHub");
 
 app.Run();

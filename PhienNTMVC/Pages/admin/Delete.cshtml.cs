@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Models;
+using PhienNTMVC.Pages.Hubs;
 using Repository;
 
 namespace PhienNTMVC.Pages.admin
@@ -10,11 +12,16 @@ namespace PhienNTMVC.Pages.admin
     {
         private readonly IAccountRepo _accountRepo;
         private readonly IConfiguration _configuration;
+        private readonly IHubContext<UserHub> _hubContext;
 
-        public DeleteModel(IAccountRepo accountRepo, IConfiguration configuration)
+        public DeleteModel(
+            IAccountRepo accountRepo,
+            IConfiguration configuration,
+            IHubContext<UserHub> hubContext)
         {
             _accountRepo = accountRepo;
             _configuration = configuration;
+            _hubContext = hubContext;
         }
 
         [BindProperty]
@@ -75,7 +82,7 @@ namespace PhienNTMVC.Pages.admin
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             // Check if user is logged in and is admin
             var userEmail = HttpContext.Session.GetString("email");
@@ -121,8 +128,17 @@ namespace PhienNTMVC.Pages.admin
             {
                 try
                 {
+                    // Save account info before deletion for SignalR notification
+                    int accountId = account.AccountId;
+                    string accountName = account.AccountName;
+
+                    // Delete the account
                     _accountRepo.DeleteAccount(SystemAccount.AccountId);
-                    TempData["SuccessMessage"] = $"User '{account.AccountName}' was successfully deleted.";
+
+                    // Send real-time notification via SignalR
+                    await _hubContext.Clients.All.SendAsync("UserDeleted", accountId, accountName);
+
+                    TempData["SuccessMessage"] = $"User '{accountName}' was successfully deleted.";
                 }
                 catch (Exception ex)
                 {

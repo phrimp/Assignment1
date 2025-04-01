@@ -88,6 +88,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcbG9naW4uY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[E:/Work/PhienNT_Net1709_A01.sln/PhienNTMVC/Pages/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9nb3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [E:/Work/PhienNT_Net1709_A01.sln/PhienNTMVC/Pages/news/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcbmV3c1xDcmVhdGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
