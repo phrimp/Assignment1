@@ -1,17 +1,25 @@
 ﻿@page
 @model PhienNTMVC.Pages.news.DetailsModel
 @{
-    ViewData["Title"] = Model.NewsArticle.NewsTitle;
+    ViewData["Title"] = Model.NewsArticle?.NewsTitle ?? "Article Details";
 }
 
 <div class="container mt-4">
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="row mb-3">
         <div class="col">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
                     <li class="breadcrumb-item"><a asp-page="/news/Index">News</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@Model.NewsArticle.NewsTitle</li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.NewsArticle?.NewsTitle</li>
                 </ol>
             </nav>
         </div>
@@ -19,11 +27,15 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <h1 class="card-title mb-4">@Model.NewsArticle.NewsTitle</h1>
+            <h1 class="card-title mb-4">@Model.NewsArticle?.NewsTitle</h1>
 
             <div class="d-flex justify-content-between mb-4">
                 <div>
-                    <span class="badge bg-primary">@Model.NewsArticle.Category.CategoryName</span>
+                    @if (Model.NewsArticle?.Category != null)
+                    {
+                        <span class="badge bg-primary">@Model.NewsArticle.Category.CategoryName</span>
+                    }
+
                     @if (Model.Tags != null && Model.Tags.Any())
                     {
                         @foreach (var tag in Model.Tags)
@@ -33,11 +45,11 @@
                     }
                 </div>
                 <small class="text-muted">
-                    Published on @Model.NewsArticle.CreatedDate.ToString("MMMM dd, yyyy")
+                    Published on @Model.NewsArticle?.CreatedDate.ToString("MMMM dd, yyyy")
                 </small>
             </div>
 
-            @if (!string.IsNullOrEmpty(Model.NewsArticle.Headline))
+            @if (!string.IsNullOrEmpty(Model.NewsArticle?.Headline))
             {
                 <div class="alert alert-light">
                     <h5>@Model.NewsArticle.Headline</h5>
@@ -45,10 +57,17 @@
             }
 
             <div class="mt-4">
-                @Html.Raw(Model.NewsArticle.NewsContent.Replace("\n", "<br />"))
+                @if (!string.IsNullOrEmpty(Model.NewsArticle?.NewsContent))
+                {
+                    @Html.Raw(Model.NewsArticle.NewsContent.Replace("\n", "<br />"))
+                }
+                else
+                {
+                    <p class="text-muted">No content available.</p>
+                }
             </div>
 
-            @if (!string.IsNullOrEmpty(Model.NewsArticle.NewsSource))
+            @if (!string.IsNullOrEmpty(Model.NewsArticle?.NewsSource))
             {
                 <div class="mt-4">
                     <strong>Source:</strong> @Model.NewsArticle.NewsSource
@@ -57,8 +76,12 @@
 
             <div class="mt-4 text-muted">
                 <small>
-                    Created by @Model.NewsArticle.CreatedBy.AccountName
-                    @if (Model.NewsArticle.UpdatedById.HasValue)
+                    @if (Model.NewsArticle?.CreatedBy != null)
+                    {
+                        <span>Created by @Model.NewsArticle.CreatedBy.AccountName</span>
+                    }
+
+                    @if (Model.NewsArticle?.UpdatedById.HasValue == true && Model.NewsArticle?.UpdatedBy != null)
                     {
                         <span> | Last updated by @Model.NewsArticle.UpdatedBy.AccountName on @Model.NewsArticle.ModifiedDate?.ToString("MMMM dd, yyyy")</span>
                     }
@@ -71,8 +94,8 @@
         <a asp-page="./Index" class="btn btn-outline-primary">Back to List</a>
         @if (HttpContext.Session.GetString("email") != null)
         {
-            <a asp-page="./Edit" asp-route-id="@Model.NewsArticle.NewsArticleId" class="btn btn-outline-secondary ms-2">Edit</a>
-            <a asp-page="./Delete" asp-route-id="@Model.NewsArticle.NewsArticleId" class="btn btn-outline-danger ms-2">Delete</a>
+            <a asp-page="./Edit" asp-route-id="@Model.NewsArticle?.NewsArticleId" class="btn btn-outline-secondary ms-2">Edit</a>
+            <a asp-page="./Delete" asp-route-id="@Model.NewsArticle?.NewsArticleId" class="btn btn-outline-danger ms-2">Delete</a>
         }
     </div>
 </div>

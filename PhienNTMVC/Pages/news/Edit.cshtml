@@ -8,12 +8,20 @@
     <h1>Edit News Article</h1>
     <hr />
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <form method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <input type="hidden" asp-for="NewsArticle.NewsArticleId" />
         <input type="hidden" asp-for="NewsArticle.CreatedById" />
         <input type="hidden" asp-for="NewsArticle.CreatedDate" />
-        
+
         <div class="row">
             <div class="col-md-8">
                 <div class="card mb-4">
@@ -23,25 +31,25 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label asp-for="NewsArticle.NewsTitle" class="form-label">Title</label>
-                            <input asp-for="NewsArticle.NewsTitle" class="form-control" />
+                            <input asp-for="NewsArticle.NewsTitle" class="form-control" required />
                             <span asp-validation-for="NewsArticle.NewsTitle" class="text-danger"></span>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label asp-for="NewsArticle.Headline" class="form-label">Headline/Summary</label>
                             <input asp-for="NewsArticle.Headline" class="form-control" />
                             <span asp-validation-for="NewsArticle.Headline" class="text-danger"></span>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label asp-for="NewsArticle.NewsContent" class="form-label">Content</label>
-                            <textarea asp-for="NewsArticle.NewsContent" class="form-control" rows="10"></textarea>
+                            <textarea asp-for="NewsArticle.NewsContent" class="form-control" rows="10" required></textarea>
                             <span asp-validation-for="NewsArticle.NewsContent" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-4">
                 <div class="card mb-4">
                     <div class="card-header">
@@ -50,48 +58,48 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label asp-for="NewsArticle.CategoryId" class="form-label">Category</label>
-                            <select asp-for="NewsArticle.CategoryId" class="form-select" asp-items="Model.CategorySelectList">
+                            <select asp-for="NewsArticle.CategoryId" class="form-select" asp-items="Model.CategorySelectList" required>
                                 <option value="">-- Select Category --</option>
                             </select>
                             <span asp-validation-for="NewsArticle.CategoryId" class="text-danger"></span>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label asp-for="NewsArticle.NewsSource" class="form-label">Source</label>
                             <input asp-for="NewsArticle.NewsSource" class="form-control" />
                             <span asp-validation-for="NewsArticle.NewsSource" class="text-danger"></span>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label asp-for="NewsArticle.NewsStatus" class="form-label">Status</label>
-                            <select asp-for="NewsArticle.NewsStatus" class="form-select">
+                            <select asp-for="NewsArticle.NewsStatus" class="form-select" required>
                                 <option value="Draft">Draft</option>
                                 <option value="Published">Published</option>
                                 <option value="Archived">Archived</option>
                             </select>
                             <span asp-validation-for="NewsArticle.NewsStatus" class="text-danger"></span>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Created by</label>
-                            <input type="text" class="form-control" value="@Model.NewsArticle.CreatedBy.AccountName" readonly />
+                            <input type="text" class="form-control" value="@Model.CreatorName" readonly />
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Created on</label>
-                            <input type="text" class="form-control" value="@Model.NewsArticle.CreatedDate.ToString("MMM dd, yyyy HH:mm")" readonly />
+                            <input type="text" class="form-control" value="@Model.CreationDate.ToString("MMM dd, yyyy HH:mm")" readonly />
                         </div>
-                        
-                        @if (Model.NewsArticle.UpdatedById.HasValue)
+
+                        @if (Model.NewsArticle.UpdatedById.HasValue == true)
                         {
                             <div class="mb-3">
                                 <label class="form-label">Last updated on</label>
-                                <input type="text" class="form-control" value="@Model.NewsArticle.ModifiedDate?.ToString("MMM dd, yyyy HH:mm")" readonly />
+                                <input type="text" class="form-control" value="@(Model.NewsArticle.ModifiedDate?.ToString("MMM dd, yyyy HH:mm") ?? "Unknown")" readonly />
                             </div>
                         }
                     </div>
                 </div>
-                
+
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">Tags</h5>
@@ -104,7 +112,7 @@
                                 {
                                     <div class="form-check">
                                         <input class="form-check-input tag-checkbox" type="checkbox" value="@tag.TagId" id="tag-@tag.TagId"
-                                               @(Model.CurrentTags.Any(t => t.TagId == tag.TagId) ? "checked" : "")>
+                                        @(Model.CurrentTags.Any(t => t.TagId == tag.TagId) ? "checked" : "")>
                                         <label class="form-check-label" for="tag-@tag.TagId">
                                             @tag.TagName
                                         </label>
@@ -113,7 +121,7 @@
                             </div>
                             <input type="hidden" asp-for="SelectedTags" id="selected-tags-input" />
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">New Tags</label>
                             <input id="new-tags-input" type="text" class="form-control" placeholder="Enter tags separated by commas" />
@@ -124,7 +132,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="mb-3">
             <button type="submit" class="btn btn-primary" onclick="prepareTagsBeforeSubmit()">Save Changes</button>
             <a asp-page="Index" class="btn btn-secondary">Cancel</a>
@@ -134,8 +142,10 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
     <script>
         function prepareTagsBeforeSubmit() {
             // Process selected existing tags
@@ -144,10 +154,10 @@
                 selectedTags.push(checkbox.value);
             });
             document.getElementById('selected-tags-input').value = selectedTags.join(',');
-            
+
             // Process new tags
             const newTagsInput = document.getElementById('new-tags-input').value;
             document.getElementById('new-tags-hidden').value = newTagsInput;
         }
     </script>
-   }
+}

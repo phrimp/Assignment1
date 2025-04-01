@@ -86,5 +86,66 @@ namespace DAO
                 .Include(t => t.NewsArticles)
                 .FirstOrDefault(t => t.TagId == tagId)?.NewsArticles.Any() ?? false;
         }
+        // This should be in your NewsArticleDAO.cs file
+
+        public void AddTagToNewsArticle(int articleId, int tagId)
+        {
+            try
+            {
+                // Always use a fresh context for relationship operations
+                using (var context = new NewsSystemContext())
+                {
+                    var article = context.NewsArticles
+                        .Include(a => a.Tags)
+                        .FirstOrDefault(a => a.NewsArticleId == articleId);
+
+                    var tag = context.Tags.Find(tagId);
+
+                    if (article != null && tag != null)
+                    {
+                        // Check if the relationship already exists
+                        if (!article.Tags.Any(t => t.TagId == tagId))
+                        {
+                            article.Tags.Add(tag);
+                            context.SaveChanges();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding tag to article: {ex.Message}");
+                throw;
+            }
+        }
+
+        public void RemoveTagFromNewsArticle(int articleId, int tagId)
+        {
+            try
+            {
+                // Always use a fresh context for relationship operations
+                using (var context = new NewsSystemContext())
+                {
+                    var article = context.NewsArticles
+                        .Include(a => a.Tags)
+                        .FirstOrDefault(a => a.NewsArticleId == articleId);
+
+                    if (article != null)
+                    {
+                        var tagToRemove = article.Tags.FirstOrDefault(t => t.TagId == tagId);
+                        if (tagToRemove != null)
+                        {
+                            article.Tags.Remove(tagToRemove);
+                            context.SaveChanges();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error removing tag from article: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

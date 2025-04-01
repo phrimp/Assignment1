@@ -30,11 +30,14 @@ namespace DAO
 
         public IEnumerable<NewsArticle> GetAllNewsArticles()
         {
+            _dbContext.ChangeTracker.Clear();
+
             return _dbContext.NewsArticles
                 .Include(a => a.Category)
                 .Include(a => a.CreatedBy)
                 .Include(a => a.UpdatedBy)
                 .Include(a => a.Tags)
+                .AsNoTracking() 
                 .ToList();
         }
 
@@ -51,12 +54,21 @@ namespace DAO
 
         public NewsArticle GetNewsArticleById(int id)
         {
-            return _dbContext.NewsArticles
-                .Include(a => a.Category)
-                .Include(a => a.CreatedBy)
-                .Include(a => a.UpdatedBy)
-                .Include(a => a.Tags)
-                .FirstOrDefault(a => a.NewsArticleId == id);
+            try
+            {
+                return _dbContext.NewsArticles
+                    .Include(a => a.Category)
+                    .Include(a => a.CreatedBy)
+                    .Include(a => a.UpdatedBy)
+                    .Include(a => a.Tags)
+                    .FirstOrDefault(a => a.NewsArticleId == id);
+            }
+            catch (Exception ex)
+            {
+                // Log the error
+                Console.WriteLine($"Error in GetNewsArticleById: {ex.Message}");
+                throw; // Rethrow to let the caller handle it
+            }
         }
 
         public IEnumerable<NewsArticle> GetNewsArticlesByCategory(int categoryId)
@@ -114,26 +126,34 @@ namespace DAO
 
         public void UpdateNewsArticle(NewsArticle article)
         {
-            _dbContext.Entry(article).State = EntityState.Modified;
-
-            // Handle tags separately
-            var existingArticle = _dbContext.NewsArticles
-                .Include(a => a.Tags)
-                .FirstOrDefault(a => a.NewsArticleId == article.NewsArticleId);
-
-            if (existingArticle != null)
+            try
             {
-                // Clear existing tags
-                existingArticle.Tags.Clear();
-
-                // Add new tags
-                foreach (var tag in article.Tags)
+                using (var context = new NewsSystemContext())
                 {
-                    existingArticle.Tags.Add(tag);
-                }
-            }
+                    var existingArticle = context.NewsArticles.Find(article.NewsArticleId);
 
-            _dbContext.SaveChanges();
+                    if (existingArticle == null)
+                        throw new Exception("Article not found");
+
+                    existingArticle.NewsTitle = article.NewsTitle;
+                    existingArticle.Headline = article.Headline;
+                    existingArticle.NewsContent = article.NewsContent;
+                    existingArticle.NewsSource = article.NewsSource;
+                    existingArticle.CategoryId = article.CategoryId;
+                    existingArticle.NewsStatus = article.NewsStatus;
+                    existingArticle.UpdatedById = article.UpdatedById;
+                    existingArticle.ModifiedDate = article.ModifiedDate;
+
+                    context.SaveChanges();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // Log the error
+                Console.WriteLine($"Error updating article: {ex.Message}");
+                throw; // Rethrow to let the caller handle it
+            }
         }
 
         public void DeleteNewsArticle(int id)
@@ -175,5 +195,6 @@ namespace DAO
                 _dbContext.SaveChanges();
             }
         }
+
     }
 }

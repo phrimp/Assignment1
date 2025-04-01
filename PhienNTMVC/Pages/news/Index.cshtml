@@ -16,6 +16,22 @@
     </div>
 </div>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="row mb-4">
     <div class="col-md-8">
         <form method="get" class="d-flex">
@@ -33,40 +49,58 @@
 </div>
 
 <div class="row">
-    @foreach (var item in Model.NewsArticle)
+    @if (Model.NewsArticle != null && Model.NewsArticle.Any())
     {
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">@item.NewsTitle</h5>
-                    <p class="card-text small text-muted">
-                        <span class="badge bg-secondary">@item.Category.CategoryName</span>
-                        <span class="ms-2">@item.CreatedDate.ToString("MMM dd, yyyy")</span>
-                    </p>
-                    @if (!string.IsNullOrEmpty(item.Headline))
-                    {
-                        <p class="card-text fw-bold">@item.Headline</p>
-                    }
-                    <p class="card-text">@(item.NewsContent.Length > 150 ? item.NewsContent.Substring(0, 150) + "..." : item.NewsContent)</p>
+        foreach (var item in Model.NewsArticle)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.NewsTitle</h5>
+                        <p class="card-text small text-muted">
+                            <span class="badge bg-secondary">@item.Category?.CategoryName</span>
+                            <span class="ms-2">@item.CreatedDate.ToString("MMM dd, yyyy")</span>
+                            <span class="ms-2">
+                                @if (item.NewsStatus == "Published")
+                                {
+                                    <span class="badge bg-success">@item.NewsStatus</span>
+                                }
+                                else if (item.NewsStatus == "Draft")
+                                {
+                                    <span class="badge bg-warning text-dark">@item.NewsStatus</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@item.NewsStatus</span>
+                                }
+                            </span>
+                        </p>
+                        @if (!string.IsNullOrEmpty(item.Headline))
+                        {
+                            <p class="card-text fw-bold">@item.Headline</p>
+                        }
+                        <p class="card-text">@(item.NewsContent?.Length > 150 ? item.NewsContent.Substring(0, 150) + "..." : item.NewsContent)</p>
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-between">
+                        <a asp-page="./Details" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-primary">Read More</a>
+                        @if (HttpContext.Session.GetString("email") != null)
+                        {
+                            <div>
+                                <a asp-page="./Edit" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a asp-page="./Delete" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-danger">Delete</a>
+                            </div>
+                        }
+                    </div>
                 </div>
-                <div class="card-footer bg-transparent d-flex justify-content-between">
-                    <a asp-page="./Details" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-primary">Read More</a>
-                    @if (HttpContext.Session.GetString("email") != null)
-                    {
-                        <div>
-                            <a asp-page="./Edit" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-secondary">Edit</a>
-                            <a asp-page="./Delete" asp-route-id="@item.NewsArticleId" class="btn btn-sm btn-outline-danger">Delete</a>
-                        </div>
-                    }
-                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info">
+                No news articles found.
             </div>
         </div>
     }
 </div>
-
-@if (!Model.NewsArticle.Any())
-{
-    <div class="alert alert-info">
-        No news articles found.
-    </div>
-}

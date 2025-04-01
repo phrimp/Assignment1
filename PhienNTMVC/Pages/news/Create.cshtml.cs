@@ -33,10 +33,10 @@ namespace PhienNTMVC.Pages.news
         public NewsArticle NewsArticle { get; set; } = new NewsArticle();
 
         [BindProperty]
-        public string SelectedTags { get; set; } 
+        public string SelectedTags { get; set; }
 
         [BindProperty]
-        public string NewTags { get; set; } 
+        public string NewTags { get; set; }
 
         public SelectList CategorySelectList { get; set; }
         public List<Tag> AvailableTags { get; set; } = new List<Tag>();
@@ -59,11 +59,11 @@ namespace PhienNTMVC.Pages.news
             NewsArticle.CreatedById = currentUser.AccountId;
             NewsArticle.NewsStatus = "Draft"; // Default status
 
-            CategorySelectList = new SelectList(
-                _categoryRepo.GetActiveCategories(),
-                "CategoryId",
-                "CategoryName");
+            // Get active categories for dropdown
+            var categories = _categoryRepo.GetActiveCategories().ToList();
+            CategorySelectList = new SelectList(categories, "CategoryId", "CategoryName");
 
+            // Get all tags for selection
             AvailableTags = _tagRepo.GetAllTags().ToList();
 
             return Page();
@@ -83,67 +83,78 @@ namespace PhienNTMVC.Pages.news
                 return RedirectToPage("/login");
             }
 
-            if (!ModelState.IsValid)
+            
+
+            try
             {
-                CategorySelectList = new SelectList(
-                    _categoryRepo.GetActiveCategories(),
-                    "CategoryId",
-                    "CategoryName");
+                // Set creation metadata
+                NewsArticle.CreatedDate = DateTime.Now;
+                NewsArticle.CreatedById = currentUser.AccountId;
+
+                if (string.IsNullOrEmpty(NewsArticle.NewsStatus))
+                {
+                    NewsArticle.NewsStatus = "Draft";
+                }
+
+                // Add the article first to get its ID
+                _newsRepo.AddNewsArticle(NewsArticle);
+
+                // Process selected existing tags
+                if (!string.IsNullOrEmpty(SelectedTags))
+                {
+                    var tagIds = SelectedTags.Split(',')
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .Select(int.Parse)
+                        .ToList();
+
+                    foreach (var tagId in tagIds)
+                    {
+                        _newsRepo.AddTagToNewsArticle(NewsArticle.NewsArticleId, tagId);
+                    }
+                }
+
+                // Process new tags
+                if (!string.IsNullOrEmpty(NewTags))
+                {
+                    var tagNames = NewTags.Split(',')
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .Select(s => s.Trim())
+                        .ToList();
+
+                    foreach (var tagName in tagNames)
+                    {
+                        var existingTag = _tagRepo.GetTagByName(tagName);
+
+                        if (existingTag == null)
+                        {
+                            // Create new tag
+                            var newTag = new Tag
+                            {
+                                TagName = tagName
+                            };
+                            _tagRepo.AddTag(newTag);
+                            existingTag = _tagRepo.GetTagByName(tagName);
+                        }
+
+                        // Add the tag to the article
+                        if (existingTag != null)
+                        {
+                            _newsRepo.AddTagToNewsArticle(NewsArticle.NewsArticleId, existingTag.TagId);
+                        }
+                    }
+                }
+
+                TempData["SuccessMessage"] = "News article created successfully.";
+                return RedirectToPage("./Index");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Error creating news article: {ex.Message}");
+                var categories = _categoryRepo.GetActiveCategories().ToList();
+                CategorySelectList = new SelectList(categories, "CategoryId", "CategoryName");
                 AvailableTags = _tagRepo.GetAllTags().ToList();
                 return Page();
             }
-
-            NewsArticle.CreatedDate = DateTime.Now;
-            NewsArticle.CreatedById = currentUser.AccountId;
-
-            if (string.IsNullOrEmpty(NewsArticle.NewsStatus))
-            {
-                NewsArticle.NewsStatus = "Draft";
-            }
-
-            _newsRepo.AddNewsArticle(NewsArticle);
-
-            if (!string.IsNullOrEmpty(SelectedTags))
-            {
-                var tagIds = SelectedTags.Split(',')
-                    .Where(s => !string.IsNullOrWhiteSpace(s))
-                    .Select(int.Parse)
-                    .ToList();
-
-                foreach (var tagId in tagIds)
-                {
-                    _newsRepo.AddTagToNewsArticle(NewsArticle.NewsArticleId, tagId);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(NewTags))
-            {
-                var tagNames = NewTags.Split(',')
-                    .Where(s => !string.IsNullOrWhiteSpace(s))
-                    .Select(s => s.Trim())
-                    .ToList();
-
-                foreach (var tagName in tagNames)
-                {
-                    var existingTag = _tagRepo.GetTagByName(tagName);
-
-                    if (existingTag == null)
-                    {
-                        var newTag = new Tag
-                        {
-                            TagName = tagName
-                        };
-
-                        _tagRepo.AddTag(newTag);
-
-                        existingTag = _tagRepo.GetTagByName(tagName);
-                    }
-
-                    _newsRepo.AddTagToNewsArticle(NewsArticle.NewsArticleId, existingTag.TagId);
-                }
-            }
-
-            return RedirectToPage("./Index");
         }
     }
 }

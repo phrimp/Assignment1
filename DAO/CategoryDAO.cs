@@ -46,8 +46,26 @@ namespace DAO
 
         public void UpdateCategory(Category category)
         {
-            _dbContext.Entry(category).State = EntityState.Modified;
-            _dbContext.SaveChanges();
+            try
+            {
+                var existingEntry = _dbContext.ChangeTracker.Entries<Category>()
+                    .FirstOrDefault(e => e.Entity.CategoryId == category.CategoryId);
+
+                if (existingEntry != null)
+                {
+                    _dbContext.Entry(existingEntry.Entity).State = EntityState.Detached;
+                }
+
+                _dbContext.Attach(category);
+                _dbContext.Entry(category).State = EntityState.Modified;
+
+                _dbContext.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating category: {ex.Message}");
+                throw;
+            }
         }
 
         public void DeleteCategory(int id)
