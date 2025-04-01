@@ -5,36 +5,41 @@
     Layout = "_AdminLayout.cshtml";
 }
 
-<h1>Create User</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Create User</h1>
+    <a asp-page="./Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
 
 <div class="card shadow-sm">
     <div class="card-header">
         <h5 class="mb-0">Create New User</h5>
     </div>
     <div class="card-body">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form method="post" id="createUserForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="mb-3 row">
-                <label asp-for="SystemAccount.AccountName" class="col-sm-3 col-form-label">Name</label>
+                <label asp-for="SystemAccount.AccountName" class="col-sm-3 col-form-label required-field">Name</label>
                 <div class="col-sm-9">
-                    <input asp-for="SystemAccount.AccountName" class="form-control" />
+                    <input asp-for="SystemAccount.AccountName" class="form-control" required />
                     <span asp-validation-for="SystemAccount.AccountName" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="mb-3 row">
-                <label asp-for="SystemAccount.AccountEmail" class="col-sm-3 col-form-label">Email</label>
+                <label asp-for="SystemAccount.AccountEmail" class="col-sm-3 col-form-label required-field">Email</label>
                 <div class="col-sm-9">
-                    <input asp-for="SystemAccount.AccountEmail" class="form-control" />
+                    <input asp-for="SystemAccount.AccountEmail" class="form-control" type="email" required />
                     <span asp-validation-for="SystemAccount.AccountEmail" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="mb-3 row">
-                <label asp-for="SystemAccount.AccountRole" class="col-sm-3 col-form-label">Role</label>
+                <label asp-for="SystemAccount.AccountRole" class="col-sm-3 col-form-label required-field">Role</label>
                 <div class="col-sm-9">
-                    <select asp-for="SystemAccount.AccountRole" class="form-select" asp-items="Model.RoleSelectList">
+                    <select asp-for="SystemAccount.AccountRole" class="form-select" asp-items="Model.RoleSelectList" required>
                         <option value="">-- Select Role --</option>
                     </select>
                     <span asp-validation-for="SystemAccount.AccountRole" class="text-danger"></span>
@@ -42,28 +47,37 @@
             </div>
 
             <div class="mb-3 row">
-                <label asp-for="SystemAccount.AccountPassword" class="col-sm-3 col-form-label">Password</label>
+                <label asp-for="SystemAccount.AccountPassword" class="col-sm-3 col-form-label required-field">Password</label>
                 <div class="col-sm-9">
-                    <input asp-for="SystemAccount.AccountPassword" class="form-control" />
+                    <div class="input-group">
+                        <input asp-for="SystemAccount.AccountPassword" id="passwordInput" class="form-control" type="password" required minlength="6" />
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
                     <span asp-validation-for="SystemAccount.AccountPassword" class="text-danger"></span>
+                    <div class="password-strength mt-1" id="passwordStrength"></div>
                 </div>
             </div>
 
             <div class="mb-3 row">
-                <label for="confirmPassword" class="col-sm-3 col-form-label">Confirm Password</label>
+                <label for="confirmPassword" class="col-sm-3 col-form-label required-field">Confirm Password</label>
                 <div class="col-sm-9">
-                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" />
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required />
                     @if (!string.IsNullOrEmpty(Model.PasswordMismatch))
                     {
                         <span class="text-danger">@Model.PasswordMismatch</span>
                     }
+                    <span id="confirmPasswordValidation" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="mb-3 row">
                 <div class="col-sm-9 offset-sm-3">
-                    <button type="submit" class="btn btn-primary">Create</button>
-                    <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-1"></i>Create User
+                    </button>
+                    <a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
                 </div>
             </div>
         </form>
@@ -74,4 +88,126 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('passwordInput');
+            const icon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+
+        // Check password strength
+        document.getElementById('passwordInput').addEventListener('input', function () {
+            const password = this.value;
+            const strengthElement = document.getElementById('passwordStrength');
+
+            // Clear previous strength indicator
+            strengthElement.innerHTML = '';
+
+            if (password.length === 0) return;
+
+            // Check strength
+            let strength = 0;
+            let feedback = [];
+
+            // Length check
+            if (password.length < 6) {
+                feedback.push('Password should be at least 6 characters');
+            } else {
+                strength += 1;
+            }
+
+            // Contains uppercase
+            if (/[A-Z]/.test(password)) {
+                strength += 1;
+            } else {
+                feedback.push('Add uppercase letter');
+            }
+
+            // Contains lowercase
+            if (/[a-z]/.test(password)) {
+                strength += 1;
+            } else {
+                feedback.push('Add lowercase letter');
+            }
+
+            // Contains number
+            if (/[0-9]/.test(password)) {
+                strength += 1;
+            } else {
+                feedback.push('Add number');
+            }
+
+            // Contains special character
+            if (/[^A-Za-z0-9]/.test(password)) {
+                strength += 1;
+            } else {
+                feedback.push('Add special character');
+            }
+
+            // Create strength indicator
+            let strengthText, strengthClass;
+
+            if (strength < 2) {
+                strengthText = 'Weak';
+                strengthClass = 'text-danger';
+            } else if (strength < 4) {
+                strengthText = 'Moderate';
+                strengthClass = 'text-warning';
+            } else {
+                strengthText = 'Strong';
+                strengthClass = 'text-success';
+            }
+
+            // Display strength and feedback
+            let html = `<small class="${strengthClass}">Password strength: ${strengthText}</small>`;
+
+            if (feedback.length > 0 && strength < 4) {
+                html += `<small class="d-block text-muted">Suggestions: ${feedback.join(', ')}</small>`;
+            }
+
+            strengthElement.innerHTML = html;
+        });
+
+        // Check password confirmation
+        document.getElementById('confirmPassword').addEventListener('input', function () {
+            const password = document.getElementById('passwordInput').value;
+            const confirmPassword = this.value;
+            const validationElement = document.getElementById('confirmPasswordValidation');
+
+            if (confirmPassword.length === 0) {
+                validationElement.textContent = '';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                validationElement.textContent = 'Passwords do not match';
+            } else {
+                validationElement.textContent = '';
+            }
+        });
+
+        // Form validation before submit
+        document.getElementById('createUserForm').addEventListener('submit', function (e) {
+            const password = document.getElementById('passwordInput').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const validationElement = document.getElementById('confirmPasswordValidation');
+
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                validationElement.textContent = 'Passwords do not match';
+                document.getElementById('confirmPassword').focus();
+            }
+        });
+    </script>
 }

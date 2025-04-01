@@ -3,10 +3,6 @@
   "defaultProvider": "cdnjs",
   "libraries": [
     {
-      "library": "microsoft-signalr@8.0.7",
-      "destination": "wwwroot/lib/microsoft-signalr/"
-    },
-    {
       "provider": "jsdelivr",
       "library": "@microsoft/signalr@8.0.7",
       "destination": "wwwroot/lib/microsoft/signalr/",

@@ -1,5 +1,27 @@
 ﻿@page
 @model PhienNTMVC.Pages.LogoutModel
 @{
-    ViewData["Title"] = "Logout";
+    ViewData["Title"] = "Logging out...";
 }
+
+<div class="text-center">
+    <h1>Logging out...</h1>
+    <p>Please wait...</p>
+
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-submit the form when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('logoutForm').submit();
+        });
+    </script>
+}
+
+<form id="logoutForm" method="post" class="d-none">
+    @Html.AntiForgeryToken()
+</form>

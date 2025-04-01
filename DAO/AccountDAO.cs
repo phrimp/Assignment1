@@ -61,8 +61,26 @@ namespace DAO
 
         public void UpdateAccount(SystemAccount account)
         {
-            _dbContext.Entry(account).State = EntityState.Modified;
-            _dbContext.SaveChanges();
+            try
+            {
+                // Find the existing entity
+                var existingAccount = _dbContext.SystemAccounts.Find(account.AccountId);
+
+                if (existingAccount != null)
+                {
+                    // Detach the existing entity
+                    _dbContext.Entry(existingAccount).State = EntityState.Detached;
+                }
+
+                // Now attach the updated entity and mark it as modified
+                _dbContext.Entry(account).State = EntityState.Modified;
+                _dbContext.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                // For debugging
+                throw new Exception($"Error updating account: {ex.Message}", ex);
+            }
         }
 
         public void DeleteAccount(int id)

@@ -52,10 +52,9 @@
                                     }
                                     <li><a class="dropdown-item" href="#">My Profile</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
+                                    <li><a class="dropdown-item text-danger" asp-page="/Logout">Logout</a></li>
                                 </ul>
                             </div>
-                            <form id="logoutForm" method="post" action="/Logout" class="d-none"></form>
                         }
                         else
                         {
@@ -86,18 +85,5 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
-
-    <script>
-        // Handle logout button
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    document.getElementById('logoutForm').submit();
-                });
-            }
-        });
-    </script>
 </body>
 </html>

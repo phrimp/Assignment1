@@ -60,5 +60,3 @@ wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.min.js
 wwwroot\lib\jquery-validation-unobtrusive\LICENSE.txt
 wwwroot\lib\microsoft\signalr\dist\browser\signalr.js
 wwwroot\lib\microsoft\signalr\dist\browser\signalr.min.js
-wwwroot\lib\microsoft-signalr\signalr.js
-wwwroot\lib\microsoft-signalr\signalr.min.js

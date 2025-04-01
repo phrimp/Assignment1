@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PhienNTMVC")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+824eee8cca6205c1361dab849301079ce9a5d805")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a4d36fc6a8513215b53e17f83401284ac278760e")]
 [assembly: System.Reflection.AssemblyProductAttribute("PhienNTMVC")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PhienNTMVC")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

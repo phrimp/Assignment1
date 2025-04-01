@@ -14,29 +14,39 @@
                 <h5 class="mb-0">Users List</h5>
             </div>
             <div class="col-auto">
-                <a asp-page="Create" class="btn btn-primary btn-sm">Create New</a>
+                <a asp-page="/admin/Create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>Create New
+                </a>
             </div>
         </div>
     </div>
     <div class="card-body">
         <div class="mb-3">
-            <form method="get" class="d-flex">
-                <input type="text" name="SearchTerm" class="form-control me-2" placeholder="Search users..." value="@Model.SearchTerm">
-                <select name="RoleFilter" class="form-select me-2" asp-items="Model.RoleList">
-                    <option value="">All Roles</option>
-                </select>
-                <button type="submit" class="btn btn-outline-primary">Search</button>
-                @if (!string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.RoleFilter))
-                {
-                    <a asp-page="./Index" class="btn btn-outline-secondary ms-2">Clear</a>
-                }
+            <form method="get" class="d-flex flex-wrap">
+                <div class="input-group me-2 mb-2 mb-md-0" style="max-width: 300px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="SearchTerm" class="form-control" placeholder="Search users..." value="@Model.SearchTerm">
+                </div>
+                <div class="input-group me-2 mb-2 mb-md-0" style="max-width: 200px;">
+                    <span class="input-group-text"><i class="bi bi-filter"></i></span>
+                    <select name="RoleFilter" class="form-select" asp-items="Model.RoleList">
+                        <option value="">All Roles</option>
+                    </select>
+                </div>
+                <div class="d-flex mb-2 mb-md-0">
+                    <button type="submit" class="btn btn-outline-primary me-2">Search</button>
+                    @if (!string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.RoleFilter))
+                    {
+                        <a asp-page="/admin/Index" class="btn btn-outline-secondary">Clear</a>
+                    }
+                </div>
             </form>
         </div>
 
         <div id="notifications-area"></div>
 
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table class="table table-striped table-hover" id="usersTable">
                 <thead class="table-light">
                     <tr>
                         <th>Name</th>
@@ -77,16 +87,24 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        <a href="./Details?id=@item.AccountId" class="btn btn-outline-info btn-sm">
-                                            Details
+                                        <a asp-page="/admin/Details" asp-route-id="@item.AccountId" class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="./Edit?id=@item.AccountId" class="btn btn-outline-primary btn-sm">
-                                            Edit
+                                        <a asp-page="/admin/Edit" asp-route-id="@item.AccountId" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="./Delete?id=@item.AccountId" class="btn btn-outline-danger btn-sm"
-                                        @(item.AccountId == Model.CurrentUserId ? "onclick=\"return alert('You cannot delete your own account.'); return false;\"" : "")>
-                                            Delete
-                                        </a>
+                                        @if (item.AccountId == Model.CurrentUserId)
+                                        {
+                                            <button type="button" class="btn btn-outline-danger btn-sm" disabled>
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <a asp-page="/admin/Delete" asp-route-id="@item.AccountId" class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        }
                                     </div>
                                 </td>
                             </tr>
@@ -104,25 +122,56 @@
     </div>
 </div>
 
-<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
-
 @section Scripts {
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
-    <script src="~/js/signalr-client.js"></script>
+
     <script>
-        // Display TempData messages as toast notifications
+        // Inline SignalR Client
         document.addEventListener('DOMContentLoaded', function() {
+            // Create the connection
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/userHub")
+                .build();
+
+            // Handler for UserDeleted event
+            connection.on("UserDeleted", function (userId, userName) {
+                // Find and remove the deleted user row
+                const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+                if (row) {
+                    row.remove();
+
+                    // Check if table is now empty
+                    const tbody = document.querySelector('#usersTable tbody');
+                    if (tbody && tbody.children.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No users found.</td></tr>';
+                    }
+                }
+
+                // Show an alert
+                alert(`User "${userName}" has been deleted.`);
+            });
+
+            // Start the connection
+            connection.start()
+                .then(function() {
+                    console.log("SignalR Connected.");
+                })
+                .catch(function (err) {
+                    console.error("SignalR Connection Error: " + err.toString());
+                });
+
+            // Show TempData messages
         @if (TempData["SuccessMessage"] != null)
         {
             <text>
-                    showToast('@Html.Raw(TempData["SuccessMessage"])', 'success');
+                        alert('@TempData["SuccessMessage"]');
             </text>
         }
 
         @if (TempData["ErrorMessage"] != null)
         {
             <text>
-                    showToast('@Html.Raw(TempData["ErrorMessage"])', 'danger');
+                        alert('@TempData["ErrorMessage"]');
             </text>
         }
         });

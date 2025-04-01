@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
 
 namespace PhienNTMVC.Pages.Hubs
 {
     public class UserHub : Hub
     {
-        public async Task SendUserDeleted(int accountId, string accountName)
+        public async Task NotifyUserDeleted(int userId, string userName)
         {
-            await Clients.All.SendAsync("ReceiveUserDeleted", accountId, accountName);
+            // Broadcast to all connected clients that a user has been deleted
+            await Clients.All.SendAsync("UserDeleted", userId, userName);
         }
     }
 }

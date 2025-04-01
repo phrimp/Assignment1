@@ -1,9 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Models;
+using PhienNTMVC.Pages.Hubs;
 using Repository;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PhienNTMVC.Pages.admin
 {
@@ -11,15 +16,23 @@ namespace PhienNTMVC.Pages.admin
     {
         private readonly IAccountRepo _accountRepo;
         private readonly IConfiguration _configuration;
+        private readonly IHubContext<UserHub> _hubContext;
 
-        public EditModel(IAccountRepo accountRepo, IConfiguration configuration)
+        public EditModel(
+            IAccountRepo accountRepo,
+            IConfiguration configuration,
+            IHubContext<UserHub> hubContext)
         {
             _accountRepo = accountRepo;
             _configuration = configuration;
+            _hubContext = hubContext;
         }
 
         [BindProperty]
         public SystemAccount SystemAccount { get; set; } = default!;
+
+        [BindProperty]
+        public string? TempPassword { get; set; }
 
         public SelectList RoleSelectList { get; set; }
 
@@ -53,15 +66,16 @@ namespace PhienNTMVC.Pages.admin
 
             SystemAccount = account;
 
+            // Don't show the actual password in the form
+            TempPassword = "";
+
             // Configure role dropdown
             SetupRoleSelectList();
 
             return Page();
         }
 
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more information, see https://aka.ms/RazorPagesCRUD.
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             // Check if user is logged in and is admin
             var userEmail = HttpContext.Session.GetString("email");
@@ -78,6 +92,27 @@ namespace PhienNTMVC.Pages.admin
                 return RedirectToPage("/");
             }
 
+            // Get existing account information
+            var existingAccount = _accountRepo.GetAccountById(SystemAccount.AccountId);
+            if (existingAccount == null)
+            {
+                return NotFound();
+            }
+
+            // Remove password from model validation if empty
+            if (string.IsNullOrEmpty(TempPassword))
+            {
+                // Keep the existing password
+                SystemAccount.AccountPassword = existingAccount.AccountPassword;
+                ModelState.Remove("SystemAccount.AccountPassword");
+            }
+            else
+            {
+                // Update with new password
+                SystemAccount.AccountPassword = TempPassword;
+            }
+
+            // Validate the model excluding the password field
             if (!ModelState.IsValid)
             {
                 SetupRoleSelectList();
@@ -85,10 +120,8 @@ namespace PhienNTMVC.Pages.admin
             }
 
             // Check if email is changed and already exists
-            var existingAccount = _accountRepo.GetAccountById(SystemAccount.AccountId);
-            if (existingAccount != null &&
-                existingAccount.AccountEmail != SystemAccount.AccountEmail &&
-                _accountRepo.IsEmailExists(SystemAccount.AccountEmail))
+            if (existingAccount.AccountEmail != SystemAccount.AccountEmail &&
+                _accountRepo.IsEmailExists(SystemAccount.AccountEmail, SystemAccount.AccountId))
             {
                 ModelState.AddModelError("SystemAccount.AccountEmail", "This email is already in use by another account.");
                 SetupRoleSelectList();
@@ -97,19 +130,22 @@ namespace PhienNTMVC.Pages.admin
 
             try
             {
+                // Store the user name for SignalR notification
+                string userName = SystemAccount.AccountName;
+                int userId = SystemAccount.AccountId;
+
                 _accountRepo.UpdateAccount(SystemAccount);
+
+                // Send real-time notification via SignalR
+                await _hubContext.Clients.All.SendAsync("UserUpdated", userId, userName);
+
                 TempData["SuccessMessage"] = "User updated successfully.";
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!_accountRepo.GetAccountById(SystemAccount.AccountId).Equals(null))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                TempData["ErrorMessage"] = $"Error updating user: {ex.Message}";
+                SetupRoleSelectList();
+                return Page();
             }
 
             return RedirectToPage("./Index");

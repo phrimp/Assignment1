@@ -1,0 +1,2 @@
+E:\Work\PhienNT_Net1709_A01.sln\PhienNTMVC\wwwroot\lib\microsoft-signalr\signalr.js
+E:\Work\PhienNT_Net1709_A01.sln\PhienNTMVC\wwwroot\lib\microsoft-signalr\signalr.min.js
